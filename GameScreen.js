@@ -342,7 +342,7 @@ export default function GameScreen() {
             <View
               style={[
                 styles.laser,
-                { left: gunCenterX - 2 } // Center the 4px wide laser from gun center
+                { left: gunCenterX -3 } // Center the 4px wide laser from gun center
               ]}
             />
           )}
@@ -490,10 +490,12 @@ const styles = StyleSheet.create({
   },
   laser: {
     position: 'absolute',
-    top: 0,
-    width: 4,
+    top: -60,
+    width: 7,
+    borderWidth: 3,
+    borderColor: '#ff0000',
     height: '100%',
-    backgroundColor: '#ff0000',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#ff0000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
