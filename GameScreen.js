@@ -342,7 +342,7 @@ export default function GameScreen() {
             <View
               style={[
                 styles.laser,
-                { left: gunCenterX -3 } // Center the 4px wide laser from gun center
+                { left: gunCenterX - 2.5 } // Center the 4px wide laser from gun center
               ]}
             />
           )}
