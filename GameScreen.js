@@ -70,19 +70,24 @@ export default function GameScreen() {
    */
   
   // Fixed gun position - currently in the middle (MODIFY THIS)
-  const gunWidth = 60;
-  const gunPosition = screenWidth / 2 - gunWidth / 2;
-  const gunCenterX = screenWidth / 2;
-  
+    const gunWidth = 60;
+
+    const [gunPosition, setGunPosition] = useState({
+        x: screenWidth / 2 - gunWidth / 2,
+        y: screenHeight - 70
+    })
+
+    const [gunCenterX, setGunCenterX] = useState(screenWidth / 2);
+
   /**
    * ============== STUDENT TASK 2 ==============
    * TODO: IMPLEMENT GUN MOVEMENT
-   * 
+   *
    * Add functions to:
    * 1. Handle touch/drag events to move the gun
    * 2. Update the gun position state
    * 3. Add visual feedback for active controls
-   * 
+   *
    * Example implementation approach:
    * const handleTouchMove = (event) => {
    *   const { locationX, locationY } = event.nativeEvent;
@@ -90,22 +95,34 @@ export default function GameScreen() {
    *   setGunPosition({ x: locationX - gunWidth/2, y: locationY });
    * };
    */
-  
+
+    const handleTouchMove = (x, y) => {
+        setGunPosition({ x: x - gunWidth/2, y: y });
+        setGunCenterX(x)
+    };
+
   // Refs for game timers and IDs
   const bubbleIdRef = useRef(1);
   const timerRef = useRef(null);
   const bubbleTimerRef = useRef(null);
   const laserTimeoutRef = useRef(null);
-  
+
   /**
    * Handle tap to shoot laser
    * Currently fires the laser on any tap when game is active
    */
-  const handleTap = () => {
+  const handleTap = (event) => {
     if (!gameStarted || gameOver) return;
-    fireLaser();
+    const { pageX, pageY, target } = event.nativeEvent;
+
+    if (pageY > screenHeight - 70) {
+        handleTouchMove(pageX, pageY);
+    }
+    else {
+        fireLaser();
+    }
   };
-  
+
   /**
    * Fire a laser from the gun center
    * Creates visible laser and checks for bubble hits
@@ -115,85 +132,85 @@ export default function GameScreen() {
     if (laserTimeoutRef.current) {
       clearTimeout(laserTimeoutRef.current);
     }
-    
+
     // Make laser visible
     setLaserVisible(true);
-    
+
     /**
      * ============== STUDENT TASK 3 ==============
      * TODO: MODIFY LASER FIRING
-     * 
+     *
      * Currently the laser always fires from the center.
      * Update this to:
      * 1. Fire from the current gun position
      * 2. Consider firing angle/direction based on gun orientation
      * 3. Add visual or sound effects for better feedback
-     * 
+     *
      * Example implementation approach:
      * - Calculate laser end point based on angle
      * - Update laser rendering to show angled beam
      * - Add impact effects when laser hits bubbles
      */
-    
+
     // Check for hits immediately
     checkHits(gunCenterX);
-    
+
     // Make laser disappear after 300ms
     laserTimeoutRef.current = setTimeout(() => {
       setLaserVisible(false);
     }, 300);
   };
-  
+
   /**
    * Check if laser hits any bubbles
    * @param {number} laserX - X coordinate of the laser
    */
-  const checkHits = (laserX) => {
+  const checkHits = (laserX, laserY) => {
     setBubbles(prevBubbles => {
       const hitBubbleIds = [];
       let hitCount = 0;
-      
+
       /**
        * ============== STUDENT TASK 4 ==============
        * TODO: IMPROVE COLLISION DETECTION
-       * 
+       *
        * The current collision only works on X axis.
        * Enhance it to:
        * 1. Consider both X and Y coordinates
        * 2. Account for gun position and angle
        * 3. Add smarter targeting or auto-aiming features
-       * 
+       *
        * Example implementation approach:
        * - Calculate distance between laser line and bubble center
        * - Use line-circle intersection algorithms for angled lasers
        * - Consider adding laser width for more realistic collision
        */
-      
+
       // Check each bubble for collision
       prevBubbles.forEach(bubble => {
         // Calculate bubble center
         const bubbleCenterX = bubble.x + bubble.radius;
-        
+
         // Check if laser x-coordinate is within bubble's horizontal range
         const distanceX = Math.abs(bubbleCenterX - laserX);
-        
+
         // If laser is within bubble radius, it's a hit
         if (distanceX <= bubble.radius) {
           hitBubbleIds.push(bubble.id);
           hitCount++;
         }
       });
-      
+
       // If any bubbles were hit, update the score
       if (hitCount > 0) {
         setScore(prevScore => prevScore + hitCount);
       }
-      
+
       // Return bubbles that weren't hit
       return prevBubbles.filter(bubble => !hitBubbleIds.includes(bubble.id));
     });
   };
-  
+
   /**
    * Spawn a new bubble with random horizontal position
    * Creates bubble at bottom of screen with random X position
@@ -208,10 +225,10 @@ export default function GameScreen() {
       y: screenHeight - 100, // Start near bottom of screen
       radius: radius,
     };
-    
+
     setBubbles(prev => [...prev, newBubble]);
   };
-  
+
   /**
    * Start the game
    * Initializes game state and starts timers for bubble spawning and countdown
@@ -224,10 +241,10 @@ export default function GameScreen() {
     setBubbles([]);
     setLaserVisible(false);
     bubbleIdRef.current = 1;
-    
+
     // Start spawning bubbles every 500ms
     bubbleTimerRef.current = setInterval(spawnBubble, 500);
-    
+
     // Start countdown timer
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
@@ -242,7 +259,7 @@ export default function GameScreen() {
       });
     }, 1000);
   };
-  
+
   /**
    * Reset game
    * Returns game to initial state and cleans up timers
@@ -255,18 +272,18 @@ export default function GameScreen() {
     setTimeLeft(120);
     setLaserVisible(false);
     bubbleIdRef.current = 1;
-    
+
     if (timerRef.current) clearInterval(timerRef.current);
     if (bubbleTimerRef.current) clearInterval(bubbleTimerRef.current);
   };
-  
+
   /**
    * Move bubbles upward
    * Uses effect to animate bubbles moving up the screen
    */
   useEffect(() => {
     if (!gameStarted || gameOver) return;
-    
+
     const moveInterval = setInterval(() => {
       setBubbles(prev => {
         const updatedBubbles = prev
@@ -275,14 +292,14 @@ export default function GameScreen() {
             y: bubble.y - 2, // Move bubbles up
           }))
           .filter(bubble => bubble.y > -60); // Remove bubbles that exit the top
-        
+
         return updatedBubbles;
       });
     }, 16); // ~60 FPS
-    
+
     return () => clearInterval(moveInterval);
   }, [gameStarted, gameOver]);
-  
+
   /**
    * Cleanup on unmount
    * Ensures all timers are cleared when component unmounts
@@ -294,11 +311,11 @@ export default function GameScreen() {
       if (laserTimeoutRef.current) clearTimeout(laserTimeoutRef.current);
     };
   }, []);
-  
+
   return (
     <View style={styles.container}>
       {/* Game area */}
-      <TouchableWithoutFeedback onPress={handleTap} disabled={!gameStarted || gameOver}>
+      <TouchableWithoutFeedback onPress={(e) => handleTap(e)} disabled={!gameStarted || gameOver}>
         <View style={styles.gameArea}>
           {/* Bubbles */}
           {bubbles.map(bubble => (
@@ -309,7 +326,7 @@ export default function GameScreen() {
               radius={bubble.radius}
             />
           ))}
-          
+
           {/**
            * ============== STUDENT TASK 5 ==============
            * TODO: MODIFY LASER RENDERING
@@ -319,7 +336,7 @@ export default function GameScreen() {
            * 2. Add visual effects (color, thickness, etc.)
            * 3. Consider adding a cooldown or power meter
            */}
-          
+
           {/* Laser - currently fixed to fire from center of gun */}
           {laserVisible && (
             <View
@@ -329,7 +346,7 @@ export default function GameScreen() {
               ]}
             />
           )}
-          
+
           {/**
            * ============== STUDENT TASK 6 ==============
            * TODO: MODIFY GUN RENDERING
@@ -339,9 +356,9 @@ export default function GameScreen() {
            * 2. Add visual indication of gun direction/angle
            * 3. Add controls or touch areas for movement
            */}
-          
+
           {/* Gun - currently static in middle */}
-          <View style={[styles.gun, { left: gunPosition }]}>
+          <View style={[styles.gun, { left: gunPosition.x }]}>
             <View style={styles.gunBase} />
             <View style={styles.gunBarrel} />
           </View>
