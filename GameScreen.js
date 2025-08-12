@@ -165,7 +165,7 @@ export default function GameScreen() {
    * Check if laser hits any bubbles
    * @param {number} laserX - X coordinate of the laser
    */
-  const checkHits = (laserX, laserY) => {
+  const checkHits = (laserX) => {
     setBubbles(prevBubbles => {
       const hitBubbleIds = [];
       let hitCount = 0;

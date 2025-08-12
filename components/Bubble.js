@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderBottomColor: '#91C5FF',
     borderTopColor: "#FFFFFF",
-    borderRightColor: "#FFFFFF",
-    borderLeftColor: '#91C5FF',
+    borderRightColor: "#91C5FF",
+    borderLeftColor: '#FFFFFF',
   },
   shine: {
   position: 'absolute',
